@@ -1,0 +1,108 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  body {
+    @apply antialiased bg-cgpt-bg text-cgpt-text;
+  }
+  /* Light mode overrides */
+  html.light body {
+    @apply bg-white text-gray-900;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-accent hover:bg-accent-hover text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+  }
+
+  .btn-secondary {
+    @apply bg-cgpt-card hover:bg-cgpt-hover text-cgpt-text font-medium py-2 px-4 rounded-lg border border-cgpt-border transition-colors duration-200;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2 border border-cgpt-border rounded-lg bg-cgpt-input text-cgpt-text placeholder-cgpt-muted focus:ring-2 focus:ring-accent focus:border-transparent outline-none transition-all duration-200;
+  }
+
+  .card {
+    @apply bg-cgpt-card rounded-xl border border-cgpt-border p-6;
+  }
+
+  .icon-btn {
+    @apply p-1.5 rounded-md text-cgpt-muted hover:text-cgpt-text hover:bg-cgpt-hover transition-colors;
+  }
+
+  .menu-item {
+    @apply flex items-center gap-2 w-full px-3 py-2 text-sm text-cgpt-text hover:bg-cgpt-hover rounded-md transition-colors text-left;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #404040;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #525252;
+}
+
+/* Blinking cursor for streaming */
+.streaming-cursor::after {
+  content: '▋';
+  @apply text-accent animate-blink ml-0.5;
+}
+
+/* Markdown prose styling */
+.markdown-body {
+  @apply text-cgpt-text leading-7;
+}
+.markdown-body p {
+  @apply mb-4;
+}
+.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+  @apply font-semibold mt-6 mb-3;
+}
+.markdown-body h1 { @apply text-2xl; }
+.markdown-body h2 { @apply text-xl; }
+.markdown-body h3 { @apply text-lg; }
+.markdown-body ul {
+  @apply list-disc pl-6 mb-4 space-y-1;
+}
+.markdown-body ol {
+  @apply list-decimal pl-6 mb-4 space-y-1;
+}
+.markdown-body a {
+  @apply text-accent underline hover:text-accent-hover;
+}
+.markdown-body blockquote {
+  @apply border-l-4 border-cgpt-border pl-4 italic text-cgpt-muted my-4;
+}
+.markdown-body table {
+  @apply w-full border-collapse my-4;
+}
+.markdown-body th, .markdown-body td {
+  @apply border border-cgpt-border px-3 py-2 text-left;
+}
+.markdown-body th {
+  @apply bg-cgpt-card font-semibold;
+}
+/* Inline code (not in pre) */
+.markdown-body :not(pre) > code {
+  @apply bg-cgpt-card text-accent-light px-1.5 py-0.5 rounded text-sm font-mono;
+}

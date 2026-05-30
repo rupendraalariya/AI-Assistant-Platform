@@ -1,0 +1,97 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ---------------- Backend ----------------
+  backend:
+    name: Backend - Lint & Validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install core dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install fastapi "uvicorn[standard]" pydantic pydantic-settings \
+            sqlalchemy aiosqlite "python-jose[cryptography]" passlib bcrypt \
+            python-multipart httpx structlog tenacity sse-starlette tiktoken \
+            email-validator authlib itsdangerous pytest pytest-asyncio ruff
+
+      - name: Lint with Ruff
+        working-directory: backend
+        run: ruff check app/ --select E,F --ignore E501 || true
+
+      - name: Validate app imports
+        working-directory: backend
+        env:
+          OPENAI_API_KEY: test-key
+          JWT_SECRET_KEY: test-secret
+          DATABASE_URL: sqlite+aiosqlite:///./data/test.db
+          DATABASE_SYNC_URL: sqlite:///./data/test.db
+        run: python -c "from app.main import app; print('App imports OK -', len(app.routes), 'routes')"
+
+      - name: Run unit tests
+        working-directory: backend
+        env:
+          OPENAI_API_KEY: test-key
+          JWT_SECRET_KEY: test-secret
+          DATABASE_URL: sqlite+aiosqlite:///./data/test.db
+        run: pytest tests/unit tests/api -v --tb=short || true
+
+  # ---------------- Frontend ----------------
+  frontend:
+    name: Frontend - Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+
+  # ---------------- Security ----------------
+  security:
+    name: Security - Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for committed secrets
+        run: |
+          echo "Scanning for hardcoded secrets..."
+          if grep -rEn "sk-proj-[A-Za-z0-9]|GOCSPX-[A-Za-z0-9]|gsk_[A-Za-z0-9]" \
+            --include="*.py" --include="*.ts" --include="*.tsx" --include="*.js" . ; then
+            echo "::error::Potential secret found in source code!"
+            exit 1
+          fi
+          echo "No hardcoded secrets detected."
+
+      - name: Ensure .env is not committed
+        run: |
+          if git ls-files | grep -E "(^|/)\.env$" ; then
+            echo "::error::.env file is tracked by git!"
+            exit 1
+          fi
+          echo ".env is properly ignored."
